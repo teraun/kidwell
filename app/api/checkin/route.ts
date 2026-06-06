@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
 import { getCheckinsByStudent, addCheckin } from "@/lib/store";
-import { askOpenRouter, parseJsonLoose } from "@/lib/openrouter";
+import { demoCheckin } from "@/lib/demo-ai";
+import { parseJsonLoose, tryAskOpenRouter } from "@/lib/openrouter";
 import { parseLocale, withLocalePrompt } from "@/lib/i18n/server";
 
 export async function GET() {
@@ -49,10 +50,17 @@ Scoring weights: mood 35%, energy 25%, sleep 25%, pain-free 15% (no pain = full 
       pain_areas: painAreas || [],
     });
 
-    const raw = await askOpenRouter(system, userMessage);
-    const parsed = parseJsonLoose<{ wellbeing_score: number; summary: string }>(
-      raw
-    );
+    const raw = await tryAskOpenRouter(system, userMessage);
+    const parsed = raw
+      ? parseJsonLoose<{ wellbeing_score: number; summary: string }>(raw)
+      : demoCheckin({
+          student_name: user.full_name,
+          age: user.age,
+          mood: Number(mood),
+          energy: Number(energy),
+          sleep_hours: Number(sleepHours),
+          pain_areas: painAreas || [],
+        });
 
     addCheckin({
       student_id: user.id,

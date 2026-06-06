@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
 import { findStudentById, getCheckinsByStudent } from "@/lib/store";
-import { askOpenRouter, parseJsonLoose } from "@/lib/openrouter";
+import { demoCounsellorBrief } from "@/lib/demo-ai";
+import { parseJsonLoose, tryAskOpenRouter } from "@/lib/openrouter";
 import { parseLocale, withLocalePrompt } from "@/lib/i18n/server";
 
 export async function POST(request: NextRequest) {
@@ -42,12 +43,14 @@ Use plain, non-clinical language. Describe observed patterns only.`,
       recent_checkins: checkins,
     });
 
-    const raw = await askOpenRouter(system, userMessage);
-    const parsed = parseJsonLoose<{
-      summary: string;
-      concerns: string[];
-      conversation_starters: string[];
-    }>(raw);
+    const raw = await tryAskOpenRouter(system, userMessage);
+    const parsed = raw
+      ? parseJsonLoose<{
+          summary: string;
+          concerns: string[];
+          conversation_starters: string[];
+        }>(raw)
+      : demoCounsellorBrief(student.full_name);
 
     return NextResponse.json({ student: student.full_name, ...parsed });
   } catch (error) {
