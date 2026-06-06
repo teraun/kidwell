@@ -1,11 +1,23 @@
 const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
 const MODEL = process.env.OPENROUTER_MODEL || "anthropic/claude-sonnet-4";
 
-function getApiKey(): string {
-  const key = process.env.OPENROUTER_KEY;
+function getApiKey(): string | null {
+  const key = process.env.OPENROUTER_KEY?.trim();
+  if (!key || key === "your-openrouter-key-here") {
+    return null;
+  }
+  return key;
+}
+
+export function isOpenRouterConfigured(): boolean {
+  return getApiKey() !== null;
+}
+
+function requireApiKey(): string {
+  const key = getApiKey();
   if (!key) {
     throw new Error(
-      "OPENROUTER_KEY is not set. Add it to .env or .env.local"
+      "OPENROUTER_KEY is not set. Add it to .env.local (get a key at https://openrouter.ai/keys)"
     );
   }
   return key;
@@ -22,7 +34,7 @@ export async function askOpenRouter(
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${getApiKey()}`,
+      Authorization: `Bearer ${requireApiKey()}`,
       "HTTP-Referer":
         process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
       "X-Title": "KidWell",
@@ -40,6 +52,11 @@ export async function askOpenRouter(
 
   if (!res.ok) {
     const text = await res.text();
+    if (res.status === 401) {
+      throw new Error(
+        "OpenRouter API key is invalid. Update OPENROUTER_KEY in .env.local (https://openrouter.ai/keys)"
+      );
+    }
     throw new Error(`OpenRouter request failed (${res.status}): ${text}`);
   }
 
@@ -49,6 +66,22 @@ export async function askOpenRouter(
     throw new Error("Unexpected response from OpenRouter API");
   }
   return content;
+}
+
+/** Returns null when OpenRouter is unavailable so routes can use local demo logic. */
+export async function tryAskOpenRouter(
+  system: string,
+  userMessage: string
+): Promise<string | null> {
+  if (!isOpenRouterConfigured()) {
+    return null;
+  }
+  try {
+    return await askOpenRouter(system, userMessage);
+  } catch (error) {
+    console.warn("OpenRouter unavailable, using demo fallback:", error);
+    return null;
+  }
 }
 
 export function parseJsonLoose<T>(raw: string): T {

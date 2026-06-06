@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
-import { askOpenRouter, parseJsonLoose } from "@/lib/openrouter";
+import { demoNutritionPlan } from "@/lib/demo-ai";
+import { parseJsonLoose, tryAskOpenRouter } from "@/lib/openrouter";
 
 export async function POST() {
   try {
@@ -22,8 +23,10 @@ Use affordable, local Ethiopian foods (injera, legumes, vegetables, local staple
       context: "Ethiopian diet",
     });
 
-    const raw = await askOpenRouter(system, userMessage);
-    const parsed = parseJsonLoose(raw);
+    const raw = await tryAskOpenRouter(system, userMessage);
+    const parsed = raw
+      ? parseJsonLoose(raw)
+      : demoNutritionPlan(user.full_name, user.age ?? 10);
 
     return NextResponse.json(parsed);
   } catch (error) {
