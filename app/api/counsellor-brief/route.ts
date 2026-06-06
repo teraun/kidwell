@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
 import { findStudentById, getCheckinsByStudent } from "@/lib/store";
 import { askOpenRouter, parseJsonLoose } from "@/lib/openrouter";
+import { parseLocale, withLocalePrompt } from "@/lib/i18n/server";
 
 export async function POST(request: NextRequest) {
   try {
@@ -10,7 +11,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Not authorized" }, { status: 401 });
     }
 
-    const { studentId } = await request.json();
+    const { studentId, locale: rawLocale } = await request.json();
+    const locale = parseLocale(rawLocale);
     if (!studentId) {
       return NextResponse.json(
         { error: "studentId is required" },
@@ -25,11 +27,14 @@ export async function POST(request: NextRequest) {
 
     const checkins = getCheckinsByStudent(student.id, 30);
 
-    const system = `You are an AI assistant helping a school counsellor prepare for a supportive check-in.
+    const system = withLocalePrompt(
+      `You are an AI assistant helping a school counsellor prepare for a supportive check-in.
 You receive a student's recent check-in patterns. You NEVER diagnose or label conditions.
 Respond ONLY with valid JSON in this exact shape:
 {"summary":"2-3 sentence neutral pattern summary","concerns":["concern 1","concern 2"],"conversation_starters":["starter 1","starter 2"]}
-Use plain, non-clinical language. Describe observed patterns only.`;
+Use plain, non-clinical language. Describe observed patterns only.`,
+      locale
+    );
 
     const userMessage = JSON.stringify({
       student_ref: `S-${student.id}`,

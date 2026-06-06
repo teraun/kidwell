@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
 import { getCheckinsByStudent, addCheckin } from "@/lib/store";
 import { askOpenRouter, parseJsonLoose } from "@/lib/openrouter";
+import { parseLocale, withLocalePrompt } from "@/lib/i18n/server";
 
 export async function GET() {
   const user = await getCurrentUser();
@@ -20,7 +21,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Not authorized" }, { status: 401 });
     }
 
-    const { mood, energy, sleepHours, painAreas } = await request.json();
+    const { mood, energy, sleepHours, painAreas, locale: rawLocale } =
+      await request.json();
+    const locale = parseLocale(rawLocale);
     if (mood == null || energy == null || sleepHours == null) {
       return NextResponse.json(
         { error: "mood, energy, and sleepHours are required" },
@@ -28,11 +31,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const system = `You are a supportive school wellbeing assistant for KidWell.
+    const system = withLocalePrompt(
+      `You are a supportive school wellbeing assistant for KidWell.
 Given a student's check-in, compute a wellbeing score from 0-100 and write ONE encouraging sentence (address the student warmly).
 Respond ONLY with valid JSON: {"wellbeing_score": number, "summary": "one encouraging sentence"}
 Rules: never diagnose or name mental-health conditions; be warm and age-appropriate.
-Scoring weights: mood 35%, energy 25%, sleep 25%, pain-free 15% (no pain = full points).`;
+Scoring weights: mood 35%, energy 25%, sleep 25%, pain-free 15% (no pain = full points).`,
+      locale
+    );
 
     const userMessage = JSON.stringify({
       student_name: user.full_name,

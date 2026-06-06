@@ -77,6 +77,18 @@ kidwell-demo/
 
 Data is seeded in `lib/store.ts` with 5 days of Sara's check-in history.
 
+## Localization
+
+KidWell supports **3 languages** — switch instantly from the sidebar or login screen:
+
+| Code | Language |
+|--|--|
+| `en` | English |
+| `am` | Amharic (አማርኛ) |
+| `om` | Afaan Oromo |
+
+UI labels and **AI responses** (wellbeing summaries, meal plans, counsellor briefs) follow the selected language. Preference is saved in `localStorage`.
+
 ## Demo script (5 min)
 
 1. **Student Check-in** — Enter "Sara", mood 2, energy 2, sleep 5.5 → show AI score + summary.

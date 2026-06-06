@@ -41,6 +41,9 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useI18n } from "@/lib/i18n/context";
+import { formatDate } from "@/lib/i18n/format";
+import { LanguageSwitcher } from "@/components/language-switcher";
 
 type Role = "student" | "parent" | "counsellor";
 type User = {
@@ -59,6 +62,7 @@ function scoreBadge(score: number | null) {
 }
 
 export default function Home() {
+  const { t } = useI18n();
   const [user, setUser] = useState<User | null>(null);
   const [loadingAuth, setLoadingAuth] = useState(true);
   const [activeTab, setActiveTab] = useState("");
@@ -89,8 +93,9 @@ export default function Home() {
 
   if (loadingAuth) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
+      <div className="flex min-h-screen flex-col items-center justify-center gap-3">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <p className="text-sm text-muted-foreground">{t("loading")}</p>
       </div>
     );
   }
@@ -121,6 +126,7 @@ export default function Home() {
 /* ─────────────── LOGIN ─────────────── */
 
 function LoginView({ onLoggedIn }: { onLoggedIn: () => void }) {
+  const { t } = useI18n();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -137,19 +143,19 @@ function LoginView({ onLoggedIn }: { onLoggedIn: () => void }) {
         body: JSON.stringify({ username, password }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Login failed");
+      if (!res.ok) throw new Error(data.error || t("loginFailed"));
       onLoggedIn();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Login failed");
+      setError(err instanceof Error ? err.message : t("loginFailed"));
     } finally {
       setLoading(false);
     }
   }
 
   const demos = [
-    { u: "sara", label: "Student", desc: "Sara — age 10" },
-    { u: "parent", label: "Parent", desc: "Mrs. Alemu" },
-    { u: "counsellor", label: "Counsellor", desc: "Mr. Bekele" },
+    { u: "sara", label: t("student"), desc: t("demoSara") },
+    { u: "parent", label: t("parent"), desc: t("demoParent") },
+    { u: "counsellor", label: t("counsellor"), desc: t("demoCounsellor") },
   ];
 
   return (
@@ -163,21 +169,17 @@ function LoginView({ onLoggedIn }: { onLoggedIn: () => void }) {
           <span className="text-2xl font-bold">KidWell</span>
         </div>
         <div>
-          <h2 className="text-4xl font-bold leading-tight">
-            Supporting student wellbeing, together.
-          </h2>
-          <p className="mt-4 text-lg text-primary-foreground/80">
-            AI-powered check-ins, nutrition plans, and counsellor briefs — so
-            every child gets the support they need, early.
-          </p>
+          <h2 className="text-4xl font-bold leading-tight">{t("loginHero")}</h2>
+          <p className="mt-4 text-lg text-primary-foreground/80">{t("loginSub")}</p>
         </div>
-        <p className="text-sm text-primary-foreground/60">
-          Wellness Hackathon 2026 · Heal. Build. Thrive.
-        </p>
+        <p className="text-sm text-primary-foreground/60">{t("hackathon")}</p>
       </div>
 
       {/* Right panel */}
-      <div className="flex flex-1 items-center justify-center p-8">
+      <div className="flex flex-1 flex-col items-center justify-center p-8">
+        <div className="mb-6 w-full max-w-md flex justify-end">
+          <LanguageSwitcher />
+        </div>
         <div className="w-full max-w-md space-y-8">
           <div className="text-center lg:text-left">
             <div className="mb-4 flex items-center justify-center gap-2 lg:hidden">
@@ -186,33 +188,31 @@ function LoginView({ onLoggedIn }: { onLoggedIn: () => void }) {
               </div>
               <span className="text-xl font-bold">KidWell</span>
             </div>
-            <h1 className="text-2xl font-bold">Welcome back</h1>
-            <p className="mt-1 text-muted-foreground">
-              Sign in to your account to continue
-            </p>
+            <h1 className="text-2xl font-bold">{t("welcomeBack")}</h1>
+            <p className="mt-1 text-muted-foreground">{t("signInContinue")}</p>
           </div>
 
           <Card>
             <CardContent className="pt-6">
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="username">Username</Label>
+                  <Label htmlFor="username">{t("username")}</Label>
                   <Input
                     id="username"
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
-                    placeholder="Enter username"
+                    placeholder={t("enterUsername")}
                     required
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="password">Password</Label>
+                  <Label htmlFor="password">{t("password")}</Label>
                   <Input
                     id="password"
                     type="password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Enter password"
+                    placeholder={t("enterPassword")}
                     required
                   />
                 </div>
@@ -220,10 +220,10 @@ function LoginView({ onLoggedIn }: { onLoggedIn: () => void }) {
                   {loading ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Signing in…
+                      {t("signingIn")}
                     </>
                   ) : (
-                    "Sign in"
+                    t("signIn")
                   )}
                 </Button>
               </form>
@@ -238,7 +238,7 @@ function LoginView({ onLoggedIn }: { onLoggedIn: () => void }) {
 
           <div>
             <p className="mb-3 text-center text-sm text-muted-foreground">
-              Demo accounts — click to fill
+              {t("demoAccounts")}
             </p>
             <div className="grid grid-cols-3 gap-2">
               {demos.map((d) => (
@@ -265,6 +265,7 @@ function LoginView({ onLoggedIn }: { onLoggedIn: () => void }) {
 /* ─────────────── STUDENT: CHECK-IN ─────────────── */
 
 function StudentCheckin({ user }: { user: User }) {
+  const { t, locale } = useI18n();
   const [mood, setMood] = useState("3");
   const [energy, setEnergy] = useState("3");
   const [sleepHours, setSleepHours] = useState("7");
@@ -292,44 +293,50 @@ function StudentCheckin({ user }: { user: User }) {
           painAreas: painAreas
             ? painAreas.split(",").map((s) => s.trim()).filter(Boolean)
             : [],
+          locale,
         }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
       setResult(data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed");
+      setError(err instanceof Error ? err.message : t("genericFailed"));
     } finally {
       setLoading(false);
     }
   }
 
-  const moodLabels = ["", "Very low", "Low", "Okay", "Good", "Great"];
+  const moodLabels = [
+    "",
+    t("moodVeryLow"),
+    t("moodLow"),
+    t("moodOkay"),
+    t("moodGood"),
+    t("moodGreat"),
+  ];
 
   return (
     <div className="mx-auto max-w-2xl space-y-6">
       <div>
-        <h2 className="text-2xl font-bold">Hi, {user.full_name} 👋</h2>
-        <p className="text-muted-foreground">
-          How are you feeling today? This only takes 30 seconds.
-        </p>
+        <h2 className="text-2xl font-bold">
+          {t("hi")}, {user.full_name} 👋
+        </h2>
+        <p className="text-muted-foreground">{t("checkinSubtitle")}</p>
       </div>
 
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-lg">
             <Heart className="h-5 w-5 text-primary" />
-            Daily Check-in
+            {t("dailyCheckin")}
           </CardTitle>
-          <CardDescription>
-            Your answers help your counsellor support you better.
-          </CardDescription>
+          <CardDescription>{t("checkinDesc")}</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-5">
             <div className="grid gap-4 sm:grid-cols-3">
               <div className="space-y-2">
-                <Label>Mood (1–5)</Label>
+                <Label>{t("mood")}</Label>
                 <Select value={mood} onValueChange={setMood}>
                   <SelectTrigger>
                     <SelectValue />
@@ -344,7 +351,7 @@ function StudentCheckin({ user }: { user: User }) {
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label>Energy (1–5)</Label>
+                <Label>{t("energy")}</Label>
                 <Select value={energy} onValueChange={setEnergy}>
                   <SelectTrigger>
                     <SelectValue />
@@ -359,7 +366,7 @@ function StudentCheckin({ user }: { user: User }) {
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label>Sleep (hours)</Label>
+                <Label>{t("sleep")}</Label>
                 <Input
                   type="number"
                   min={0}
@@ -372,11 +379,11 @@ function StudentCheckin({ user }: { user: User }) {
             </div>
 
             <div className="space-y-2">
-              <Label>Any aches? (optional)</Label>
+              <Label>{t("aches")}</Label>
               <Input
                 value={painAreas}
                 onChange={(e) => setPainAreas(e.target.value)}
-                placeholder="e.g. head, stomach"
+                placeholder={t("achesPlaceholder")}
               />
             </div>
 
@@ -384,12 +391,12 @@ function StudentCheckin({ user }: { user: User }) {
               {loading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Computing score…
+                  {t("computingScore")}
                 </>
               ) : (
                 <>
                   <Sparkles className="mr-2 h-4 w-4" />
-                  Submit Check-in
+                  {t("submitCheckin")}
                 </>
               )}
             </Button>
@@ -414,7 +421,7 @@ function StudentCheckin({ user }: { user: User }) {
             </div>
             <div>
               <p className="text-sm font-medium text-muted-foreground">
-                Your wellbeing score
+                {t("wellbeingScore")}
               </p>
               <Progress value={result.wellbeing_score} className="my-2 h-2" />
               <p className="text-base italic text-foreground">
@@ -431,6 +438,7 @@ function StudentCheckin({ user }: { user: User }) {
 /* ─────────────── STUDENT: NUTRITION ─────────────── */
 
 function StudentNutrition() {
+  const { t, locale } = useI18n();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [result, setResult] = useState<{
@@ -443,12 +451,16 @@ function StudentNutrition() {
     setError("");
     setResult(null);
     try {
-      const res = await fetch("/api/nutrition", { method: "POST" });
+      const res = await fetch("/api/nutrition", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ locale }),
+      });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
       setResult(data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed");
+      setError(err instanceof Error ? err.message : t("genericFailed"));
     } finally {
       setLoading(false);
     }
@@ -457,33 +469,29 @@ function StudentNutrition() {
   return (
     <div className="mx-auto max-w-3xl space-y-6">
       <div>
-        <h2 className="text-2xl font-bold">My Nutrition Plan</h2>
-        <p className="text-muted-foreground">
-          A healthy meal plan built around local Ethiopian foods.
-        </p>
+        <h2 className="text-2xl font-bold">{t("myNutrition")}</h2>
+        <p className="text-muted-foreground">{t("nutritionSubtitle")}</p>
       </div>
 
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-lg">
             <Salad className="h-5 w-5 text-primary" />
-            Weekly Meal Plan
+            {t("weeklyMealPlan")}
           </CardTitle>
-          <CardDescription>
-            AI-generated plan based on your profile — age 10, Ethiopian diet.
-          </CardDescription>
+          <CardDescription>{t("nutritionDesc")}</CardDescription>
         </CardHeader>
         <CardContent>
           <Button onClick={handleGenerate} disabled={loading}>
             {loading ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Generating plan…
+                {t("generatingPlan")}
               </>
             ) : (
               <>
                 <Sparkles className="mr-2 h-4 w-4" />
-                Generate This Week&apos;s Plan
+                {t("generatePlan")}
               </>
             )}
           </Button>
@@ -504,15 +512,15 @@ function StudentNutrition() {
               </CardHeader>
               <CardContent className="space-y-2 text-sm">
                 <div>
-                  <span className="font-semibold text-muted-foreground">Breakfast</span>
+                  <span className="font-semibold text-muted-foreground">{t("breakfast")}</span>
                   <p>{day.breakfast}</p>
                 </div>
                 <div>
-                  <span className="font-semibold text-muted-foreground">Lunch</span>
+                  <span className="font-semibold text-muted-foreground">{t("lunch")}</span>
                   <p>{day.lunch}</p>
                 </div>
                 <div>
-                  <span className="font-semibold text-muted-foreground">Dinner</span>
+                  <span className="font-semibold text-muted-foreground">{t("dinner")}</span>
                   <p>{day.dinner}</p>
                 </div>
               </CardContent>
@@ -524,7 +532,7 @@ function StudentNutrition() {
       {result?.rationale && (
         <Alert>
           <Salad className="h-4 w-4" />
-          <AlertTitle>Why this plan</AlertTitle>
+          <AlertTitle>{t("whyThisPlan")}</AlertTitle>
           <AlertDescription>{result.rationale}</AlertDescription>
         </Alert>
       )}
@@ -535,6 +543,7 @@ function StudentNutrition() {
 /* ─────────────── PARENT ─────────────── */
 
 function ParentOverview() {
+  const { t, locale } = useI18n();
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
@@ -549,8 +558,9 @@ function ParentOverview() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-20">
+      <div className="flex flex-col items-center justify-center gap-3 py-20">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <p className="text-sm text-muted-foreground">{t("loading")}</p>
       </div>
     );
   }
@@ -558,7 +568,7 @@ function ParentOverview() {
   if (!data?.child) {
     return (
       <Alert>
-        <AlertDescription>No child linked to this account.</AlertDescription>
+        <AlertDescription>{t("noChildLinked")}</AlertDescription>
       </Alert>
     );
   }
@@ -575,14 +585,18 @@ function ParentOverview() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold">{data.child.full_name}&apos;s Wellbeing</h2>
-        <p className="text-muted-foreground">Age {data.child.age} · Parent dashboard</p>
+        <h2 className="text-2xl font-bold">
+          {data.child.full_name}&apos;s {t("childWellbeing")}
+        </h2>
+        <p className="text-muted-foreground">
+          {t("age")} {data.child.age} · {t("parentDashboard")}
+        </p>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-3">
         <Card>
           <CardHeader className="pb-2">
-            <CardDescription>Latest Score</CardDescription>
+            <CardDescription>{t("latestScore")}</CardDescription>
             <CardTitle className="text-3xl">
               {latest?.wellbeing_score ? Math.round(latest.wellbeing_score) : "—"}
             </CardTitle>
@@ -593,24 +607,24 @@ function ParentOverview() {
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardDescription>Average Score</CardDescription>
+            <CardDescription>{t("averageScore")}</CardDescription>
             <CardTitle className="text-3xl">
               {avgScore ? Math.round(avgScore) : "—"}
             </CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-sm text-muted-foreground">
-              Across {data.checkins.length} check-ins
+              {t("acrossCheckins", { n: data.checkins.length })}
             </p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardDescription>Total Check-ins</CardDescription>
+            <CardDescription>{t("totalCheckins")}</CardDescription>
             <CardTitle className="text-3xl">{data.checkins.length}</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-sm text-muted-foreground">Recorded so far</p>
+            <p className="text-sm text-muted-foreground">{t("recordedSoFar")}</p>
           </CardContent>
         </Card>
       </div>
@@ -618,7 +632,7 @@ function ParentOverview() {
       {latest?.summary && (
         <Card className="border-primary/20 bg-primary/5">
           <CardContent className="pt-6">
-            <p className="text-sm font-medium text-muted-foreground">Latest AI summary</p>
+            <p className="text-sm font-medium text-muted-foreground">{t("latestAiSummary")}</p>
             <p className="mt-1 text-lg italic">&ldquo;{latest.summary}&rdquo;</p>
           </CardContent>
         </Card>
@@ -626,28 +640,31 @@ function ParentOverview() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Check-in History</CardTitle>
+          <CardTitle>{t("checkinHistory")}</CardTitle>
         </CardHeader>
         <CardContent>
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Date</TableHead>
-                <TableHead>Mood</TableHead>
-                <TableHead>Energy</TableHead>
-                <TableHead>Sleep</TableHead>
-                <TableHead>Score</TableHead>
+                <TableHead>{t("date")}</TableHead>
+                <TableHead>{t("moodShort")}</TableHead>
+                <TableHead>{t("energyShort")}</TableHead>
+                <TableHead>{t("sleepShort")}</TableHead>
+                <TableHead>{t("score")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {data.checkins.map((c: any, i: number) => (
                 <TableRow key={i}>
                   <TableCell>
-                    {new Date(c.created_at).toLocaleDateString()}
+                    {formatDate(c.created_at, locale)}
                   </TableCell>
                   <TableCell>{c.mood}</TableCell>
                   <TableCell>{c.energy}</TableCell>
-                  <TableCell>{c.sleep_hours}h</TableCell>
+                  <TableCell>
+                    {c.sleep_hours}
+                    {t("sleepHoursUnit")}
+                  </TableCell>
                   <TableCell>{scoreBadge(c.wellbeing_score)}</TableCell>
                 </TableRow>
               ))}
@@ -662,6 +679,7 @@ function ParentOverview() {
 /* ─────────────── COUNSELLOR ─────────────── */
 
 function CounsellorDashboard({ activeTab }: { activeTab: string }) {
+  const { t, locale } = useI18n();
   const [students, setStudents] = useState<any[]>([]);
   const [selected, setSelected] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
@@ -683,13 +701,13 @@ function CounsellorDashboard({ activeTab }: { activeTab: string }) {
       const res = await fetch("/api/counsellor-brief", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ studentId }),
+        body: JSON.stringify({ studentId, locale }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
       setBrief(data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed");
+      setError(err instanceof Error ? err.message : t("genericFailed"));
     } finally {
       setLoading(false);
     }
@@ -702,17 +720,15 @@ function CounsellorDashboard({ activeTab }: { activeTab: string }) {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold">Counsellor Dashboard</h2>
-        <p className="text-muted-foreground">
-          Monitor student wellbeing and generate AI briefs.
-        </p>
+        <h2 className="text-2xl font-bold">{t("counsellorDashboard")}</h2>
+        <p className="text-muted-foreground">{t("counsellorSubtitle")}</p>
       </div>
 
       {/* Stats */}
       <div className="grid gap-4 sm:grid-cols-3">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardDescription>Total Students</CardDescription>
+            <CardDescription>{t("totalStudents")}</CardDescription>
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -721,7 +737,7 @@ function CounsellorDashboard({ activeTab }: { activeTab: string }) {
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardDescription>Needs Attention</CardDescription>
+            <CardDescription>{t("needsAttention")}</CardDescription>
             <TrendingDown className="h-4 w-4 text-destructive" />
           </CardHeader>
           <CardContent>
@@ -732,7 +748,7 @@ function CounsellorDashboard({ activeTab }: { activeTab: string }) {
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardDescription>With Check-ins</CardDescription>
+            <CardDescription>{t("withCheckins")}</CardDescription>
             <Heart className="h-4 w-4 text-primary" />
           </CardHeader>
           <CardContent>
@@ -745,27 +761,24 @@ function CounsellorDashboard({ activeTab }: { activeTab: string }) {
 
       <Tabs defaultValue={activeTab === "briefs" ? "briefs" : "students"}>
         <TabsList>
-          <TabsTrigger value="students">Student List</TabsTrigger>
-          <TabsTrigger value="briefs">AI Brief</TabsTrigger>
+          <TabsTrigger value="students">{t("studentList")}</TabsTrigger>
+          <TabsTrigger value="briefs">{t("aiBrief")}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="students">
           <Card>
             <CardHeader>
-              <CardTitle>Students</CardTitle>
-              <CardDescription>
-                Click &ldquo;Generate Brief&rdquo; to get an AI summary for a
-                supportive check-in.
-              </CardDescription>
+              <CardTitle>{t("studentsTitle")}</CardTitle>
+              <CardDescription>{t("studentsDesc")}</CardDescription>
             </CardHeader>
             <CardContent>
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Age</TableHead>
-                    <TableHead>Latest Score</TableHead>
-                    <TableHead>Last Check-in</TableHead>
+                    <TableHead>{t("name")}</TableHead>
+                    <TableHead>{t("age")}</TableHead>
+                    <TableHead>{t("latestScoreCol")}</TableHead>
+                    <TableHead>{t("lastCheckin")}</TableHead>
                     <TableHead></TableHead>
                   </TableRow>
                 </TableHeader>
@@ -780,7 +793,7 @@ function CounsellorDashboard({ activeTab }: { activeTab: string }) {
                       <TableCell>{scoreBadge(s.latest_score)}</TableCell>
                       <TableCell className="text-muted-foreground">
                         {s.latest_checkin
-                          ? new Date(s.latest_checkin).toLocaleDateString()
+                          ? formatDate(s.latest_checkin, locale)
                           : "—"}
                       </TableCell>
                       <TableCell>
@@ -795,7 +808,7 @@ function CounsellorDashboard({ activeTab }: { activeTab: string }) {
                           ) : (
                             <>
                               <Sparkles className="mr-1 h-3 w-3" />
-                              Brief
+                              {t("brief")}
                             </>
                           )}
                         </Button>
@@ -813,9 +826,7 @@ function CounsellorDashboard({ activeTab }: { activeTab: string }) {
             <Card>
               <CardContent className="flex items-center gap-3 py-12">
                 <Loader2 className="h-6 w-6 animate-spin text-primary" />
-                <span className="text-muted-foreground">
-                  AI is preparing the counsellor brief…
-                </span>
+                <span className="text-muted-foreground">{t("preparingBrief")}</span>
               </CardContent>
             </Card>
           )}
@@ -829,8 +840,7 @@ function CounsellorDashboard({ activeTab }: { activeTab: string }) {
           {!loading && !brief && !error && (
             <Card>
               <CardContent className="py-12 text-center text-muted-foreground">
-                Select a student and click &ldquo;Generate Brief&rdquo; to see
-                the AI summary here.
+                {t("selectStudentBrief")}
               </CardContent>
             </Card>
           )}
@@ -839,22 +849,21 @@ function CounsellorDashboard({ activeTab }: { activeTab: string }) {
             <div className="space-y-4">
               <Alert variant="warning">
                 <AlertTriangle className="h-4 w-4" />
-                <AlertTitle>Not a diagnostic tool</AlertTitle>
-                <AlertDescription>
-                  This brief is for supportive human follow-up only. The
-                  counsellor always decides.
-                </AlertDescription>
+                <AlertTitle>{t("notDiagnostic")}</AlertTitle>
+                <AlertDescription>{t("notDiagnosticDesc")}</AlertDescription>
               </Alert>
 
               <Card>
                 <CardHeader>
-                  <CardTitle>Brief for {brief.student}</CardTitle>
-                  <CardDescription>AI-generated pattern summary</CardDescription>
+                  <CardTitle>
+                    {t("briefFor")} {brief.student}
+                  </CardTitle>
+                  <CardDescription>{t("aiPatternSummary")}</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
                   <div>
                     <h4 className="mb-2 text-sm font-semibold uppercase tracking-wide text-primary">
-                      Summary
+                      {t("summary")}
                     </h4>
                     <p className="text-foreground">{brief.summary}</p>
                   </div>
@@ -862,7 +871,7 @@ function CounsellorDashboard({ activeTab }: { activeTab: string }) {
                   <div>
                     <h4 className="mb-2 flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-primary">
                       <AlertTriangle className="h-4 w-4" />
-                      Key Concerns
+                      {t("keyConcerns")}
                     </h4>
                     <ul className="space-y-1">
                       {brief.concerns?.map((c: string, i: number) => (
@@ -880,7 +889,7 @@ function CounsellorDashboard({ activeTab }: { activeTab: string }) {
                   <div>
                     <h4 className="mb-2 flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-primary">
                       <MessageCircle className="h-4 w-4" />
-                      Conversation Starters
+                      {t("conversationStarters")}
                     </h4>
                     <ul className="space-y-1">
                       {brief.conversation_starters?.map((s: string, i: number) => (
