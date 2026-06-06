@@ -1,26 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
-import { query } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
+import { getCheckinsByStudent, addCheckin } from "@/lib/store";
 import { askOpenRouter, parseJsonLoose } from "@/lib/openrouter";
 
-// GET: current student's recent check-ins
 export async function GET() {
   const user = await getCurrentUser();
   if (!user || user.role !== "student") {
     return NextResponse.json({ error: "Not authorized" }, { status: 401 });
   }
 
-  const checkins = await query(
-    `SELECT id, mood, energy, sleep_hours, pain_areas, wellbeing_score, summary, created_at
-     FROM checkins WHERE student_id = $1
-     ORDER BY created_at DESC LIMIT 14`,
-    [user.id]
-  );
-
+  const checkins = getCheckinsByStudent(user.id, 14);
   return NextResponse.json({ student: user.full_name, checkins });
 }
 
-// POST: submit a new check-in (student only)
 export async function POST(request: NextRequest) {
   try {
     const user = await getCurrentUser();
@@ -56,19 +48,17 @@ Scoring weights: mood 35%, energy 25%, sleep 25%, pain-free 15% (no pain = full 
       raw
     );
 
-    await query(
-      `INSERT INTO checkins (student_id, mood, energy, sleep_hours, pain_areas, wellbeing_score, summary)
-       VALUES ($1,$2,$3,$4,$5,$6,$7)`,
-      [
-        user.id,
-        Number(mood),
-        Number(energy),
-        Number(sleepHours),
-        Array.isArray(painAreas) ? painAreas.join(", ") : painAreas || "",
-        parsed.wellbeing_score,
-        parsed.summary,
-      ]
-    );
+    addCheckin({
+      student_id: user.id,
+      mood: Number(mood),
+      energy: Number(energy),
+      sleep_hours: Number(sleepHours),
+      pain_areas: Array.isArray(painAreas)
+        ? painAreas.join(", ")
+        : painAreas || "",
+      wellbeing_score: parsed.wellbeing_score,
+      summary: parsed.summary,
+    });
 
     return NextResponse.json({
       wellbeing_score: parsed.wellbeing_score,

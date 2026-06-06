@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { query } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
+import { findStudentById, getCheckinsByStudent } from "@/lib/store";
 import { askOpenRouter, parseJsonLoose } from "@/lib/openrouter";
 
 export async function POST(request: NextRequest) {
@@ -18,21 +18,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const students = await query<{ id: number; full_name: string; age: number }>(
-      `SELECT id, full_name, age FROM users WHERE id = $1 AND role = 'student'`,
-      [Number(studentId)]
-    );
-    if (students.length === 0) {
+    const student = findStudentById(Number(studentId));
+    if (!student) {
       return NextResponse.json({ error: "Student not found" }, { status: 404 });
     }
-    const student = students[0];
 
-    const checkins = await query(
-      `SELECT mood, energy, sleep_hours, pain_areas, wellbeing_score, created_at
-       FROM checkins WHERE student_id = $1
-       ORDER BY created_at DESC LIMIT 30`,
-      [student.id]
-    );
+    const checkins = getCheckinsByStudent(student.id, 30);
 
     const system = `You are an AI assistant helping a school counsellor prepare for a supportive check-in.
 You receive a student's recent check-in patterns. You NEVER diagnose or label conditions.

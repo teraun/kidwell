@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { query } from "@/lib/db";
+import { findUserByCredentials } from "@/lib/store";
 import { SESSION_COOKIE } from "@/lib/auth";
 
 export async function POST(request: NextRequest) {
@@ -12,26 +12,20 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const rows = await query(
-      `SELECT id, username, role, full_name, age, parent_id
-       FROM users WHERE username = $1 AND password = $2`,
-      [username, password]
-    );
-
-    if (rows.length === 0) {
+    const user = findUserByCredentials(username, password);
+    if (!user) {
       return NextResponse.json(
         { error: "Invalid username or password" },
         { status: 401 }
       );
     }
 
-    const user = rows[0];
     const res = NextResponse.json({ user });
     res.cookies.set(SESSION_COOKIE, String(user.id), {
       httpOnly: true,
       sameSite: "lax",
       path: "/",
-      maxAge: 60 * 60 * 24, // 1 day
+      maxAge: 60 * 60 * 24,
     });
     return res;
   } catch (error) {

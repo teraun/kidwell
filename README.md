@@ -18,9 +18,9 @@ A minimal, pitch-ready web app with **three live AI features** — no auth, no d
 # 1. Install dependencies
 npm install
 
-# 2. Add your Anthropic API key
+# 2. Add your OpenRouter API key
 cp .env.example .env.local
-# Edit .env.local and set ANTHROPIC_API_KEY=sk-ant-...
+# Edit .env.local and set OPENROUTER_KEY=sk-or-...
 
 # 3. Run the demo
 npm run dev
@@ -29,10 +29,10 @@ npm run dev
 
 ## Tech stack
 
-- **Frontend:** Next.js 14 + React + plain CSS (green `#2D9B6F` theme)
+- **Frontend:** Next.js 14 + React + Tailwind + shadcn/ui dashboard
 - **Backend:** Next.js API routes (server-side only)
-- **AI:** Anthropic Claude `claude-sonnet-4-20250514`
-- **Data:** In-memory / hardcoded — no database
+- **AI:** OpenRouter API (server-side)
+- **Data:** In-memory mock store (`lib/store.ts`) — no Postgres required
 
 ## API routes
 
@@ -65,7 +65,17 @@ kidwell-demo/
 
 | Variable | Required | Purpose |
 |--|--|--|
-| `ANTHROPIC_API_KEY` | Yes | Anthropic API key (server-side only) |
+| `OPENROUTER_KEY` | Yes | OpenRouter API key (server-side only) |
+
+## Demo accounts
+
+| Role | Username | Password |
+|--|--|--|
+| Student | `sara` | `sara` |
+| Parent | `parent` | `parent` |
+| Counsellor | `counsellor` | `counsellor` |
+
+Data is seeded in `lib/store.ts` with 5 days of Sara's check-in history.
 
 ## Demo script (5 min)
 
